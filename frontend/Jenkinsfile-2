@@ -1,0 +1,87 @@
+pipeline {
+    agent any
+
+    parameters {
+        string(name: 'name_container', defaultValue: 'felipemoralescybertrust', description: 'nombre del docker')
+        string(name: 'name_imagen_front', defaultValue: 'chatbotcybertrustfront', description: 'nombre de la imagen del front')
+        string(name: 'tag_imagen', defaultValue: 'latest', description: 'etiqueta de la imagen')
+        string(name: 'name_imagen_back', defaultValue: 'chatbotcybertrustback', description: 'nombre de la imagen del back')
+    }
+
+    environment {
+        name_final_front = "${name_container}/${name_imagen_front}:${tag_imagen}"
+        name_final_back = "${name_container}/${name_imagen_back}:${tag_imagen}"
+    }
+
+    stages {
+        stage('Detener/Eliminar Primero') {
+            when {
+                expression {
+                    DOCKER_EXISTE = bat(returnStatus: true, script: "docker ps -q --filter name=${name_final_front}")
+                    return DOCKER_EXISTE.toInteger() != 0
+                }
+            }
+            steps {
+                script {
+                    bat """
+                        docker stop ${name_final_front}
+                        docker rm ${name_final_front}
+                    """
+                }
+            }
+        }
+
+        stage('Detener/Eliminar Segundo') {
+            when {
+                expression {
+                    DOCKER_EXISTE = bat(returnStatus: true, script: "docker ps -q --filter name=${name_final_back}")
+                    return DOCKER_EXISTE.toInteger() != 0
+                }
+            }
+            steps {
+                script {
+                    bat """
+                        docker stop ${name_final_back}
+                        docker rm ${name_final_back}
+                    """
+                }
+            }
+        }
+
+        stage('Construir Primero') {
+            steps {
+                script {
+                    withCredentials([string(credentialsId: 'IDKATERINA', variable: 'USUARIO'),
+                                     string(credentialsId: 'TOKENKATERINA', variable: 'CONTRASENA')]) {
+                        bat """
+                            docker build -t ${name_final_front} https://${USUARIO}:${CONTRASENA}@github.com/KaterinaPenaloza/ChatbotCybertrust-front.git
+                        """
+                    }
+                }
+            }
+        }
+
+        stage('Construir Segundo') {
+            steps {
+                script {
+                    withCredentials([string(credentialsId: 'IDKATERINA', variable: 'USUARIO'),
+                                     string(credentialsId: 'TOKENKATERINA', variable: 'CONTRASENA')]) {
+                        bat """
+                            docker build -t ${name_final_back} https://${USUARIO}:${CONTRASENA}@github.com/KaterinaPenaloza/ChatbotCybertrust-back.git
+                        """
+                    }
+                }
+            }
+        }
+
+        stage('Construir y Desplegar') {
+            steps {
+                script {
+                    dir('C:/ProgramData/Jenkins/.jenkins/workspace/ChatbotCybertrust') {
+                        bat 'docker-compose -f docker-compose.yml up -d'
+                    }
+                }
+            }
+        }
+    }
+}

@@ -1,0 +1,304 @@
+/* Estilos Generales */
+body, html {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  background-color: #f7f7f7;
+  color: #333333;
+}
+
+/* Header */
+.chat-header-banner {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100vw;
+  padding: 1% 2%;
+  margin: 0;
+  background: linear-gradient(45deg, rgba(30,112,182,1) 0%, rgba(0,171,210,1) 35%, rgba(153,192,29,1) 100%);
+  color: #f0f0f0;
+  font-size: 24px;
+  font-weight: bold;
+  text-align: center;
+  box-sizing: border-box;
+}
+
+/* Header Responsive */
+@media (max-width: 600px) {
+  .chat-header-banner {
+    padding: 16px 2%;
+  }
+}
+
+.logo-image {
+  width: 100%;
+  max-width: 150px;
+  height: auto;
+}
+
+.button-container {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.right-align {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  justify-content: flex-end;
+}
+
+/* Botones Home e Info */
+.home-button, .info-button {
+  background-color: transparent;
+  border: none;
+  font-size: 24px;
+  padding: 1% 1%;
+  cursor: pointer;
+  border-radius: 50%;
+  color: #f0f0f0;
+  margin-left: 10px;
+  transform: translateY(-50%);
+}
+
+/* Botón Responsive */
+@media (max-width: 600px) {
+  .home-button, .info-button {
+    font-size: 18px;
+    padding: 8px 8px;
+  }
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.modal {
+  background: #f0f0f0;
+  color: #333333;
+  font-size: 15px;
+  font-weight: lighter;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.2);
+}
+
+.modal button {
+  cursor: pointer;
+  display: inline-block;
+  background-color: #333333;
+  color: #f0f0f0;
+  border-radius: 8px;
+  font-size: 10px;
+  padding: 10px 20px;
+  margin-left: auto;
+}
+
+/* Estilos del Cuerpo */
+.chat-app {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100vh;
+  background-color: #f7f7f7;
+  margin: 0;
+}
+
+/* Estilos del Chat */
+.chat-history-container {
+  flex-grow: 1;
+  width: 100%;
+  max-height: 70vh;
+  overflow-y: auto;
+  margin-left: 50px;
+  margin-right: 50px;
+}
+
+.chat-history {
+  list-style-type: none;
+  padding: 0;
+}
+
+/* Mensajes */
+.message {
+  padding: 8px 16px;
+  margin-bottom: 8px;
+  border-radius: 16px;
+  word-wrap: break-word;
+  max-width: 60%;
+}
+
+.user-message {
+  background-color: rgba(0, 178, 230, 0.8);
+  color: #ffffff;
+  align-self: flex-end;
+  margin-left: 30%;
+  margin-right: 1%;
+}
+
+.bot-message {
+  background-color: rgba(138, 187, 47, 0.8);
+  align-self: flex-start;
+  margin-right: 40%;
+  margin-left: 1%;
+}
+
+.question-buttons {
+  background-color: rgba(255, 128, 49, 0.8);
+  color: #ffffff;
+  padding: 8px 16px;
+  border: none;
+  transition: background-color 0.3s ease;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.question-buttons:hover {
+  background-color: rgba(255, 128, 49, 1);
+  cursor: pointer;
+}
+
+/* Entrada */
+.chat-input-container {
+  width: 100%;
+  padding: 16px;
+  box-sizing: border-box;
+}
+
+.chat-input-form {
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.chat-input input {
+  flex-grow: 1;
+  padding: 8px 16px;
+  margin-right: 1%;
+  margin-left: 1%;
+  border: 1px solid #cccccc;
+  border-radius: 16px;
+  outline: none;
+  font-size: 16px;
+}
+
+.chat-input-form input {
+  flex-grow: 1;
+  padding: 8px 16px;
+  border: 1px solid #cccccc;
+  border-radius: 10px;
+  outline: none;
+  font-size: 16px;
+  margin-right: 5px;
+}
+
+.send-button {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 10px;
+  background-color: rgba(54, 98, 178, 1);
+  color: #ffffff;
+  cursor: pointer;
+  font-size: 16px;
+  margin: 1%;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Temas */
+.menu-temas {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 24px;
+  margin: 16px 0;
+  background-color: rgba(255, 205, 0, 1);
+  color: #333333;
+  font-size: 24px;
+  font-weight: bold;
+  border-radius: 8px;
+  text-align: center;
+  box-sizing: border-box;
+}
+
+
+
+/* Botones de subtemas dentro del contenedor blanco */
+.theme-button {
+  background-color: rgba(54, 98, 178, 1);
+  color: #ffffff;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 16px;
+  text-align: center;
+  transition: transform 0.2s, background-color 0.2s;
+  width: 100%;
+}
+
+/* Hover de los botones de tema */
+.theme-button:hover {
+  background-color: rgba(54, 98, 178, 0.9);
+  transform: scale(1.05);
+}
+
+/* Contenedor general de subtemas */
+.theme-buttons-list {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 16px;
+  margin: 16px auto;
+  background-color: rgba(0, 0, 0, 0);
+  border-radius: 6px;
+  max-width: 600px;
+}
+
+/* Botones de subtemas y opciones */
+.theme-button, .opciones-buttons {
+  background-color: rgba(54, 98, 178, 1);
+  color: #ffffff;
+  padding: 12px 16px; 
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 16px; 
+  width: 100%; 
+  max-width: 400px; 
+  text-align: center;
+  white-space: nowrap;
+  box-shadow: 
+    inset 0 -2px 4px rgba(0, 0, 0, 0.2), 
+    0 4px 8px rgba(0, 0, 0, 0.2);
+  transition: transform 0.2s, background-color 0.2s;
+  margin-bottom: 16px; /* Espacio entre los botones */
+}
+
+/* Añadir margen a las opciones-botones */
+.opciones-buttons {
+  margin-left: 16px; /* Aumentar espacio entre los botones */
+  margin-right: 16px;
+}
+
+/* Hover para los botones */
+.theme-button:hover, .opciones-buttons:hover {
+  background-color: rgba(54, 98, 178, 0.9);
+  transform: scale(1.05);
+}
+
+.reset-button {
+  margin-left: 5px;
+  background-color: transparent;
+  border: none;
+}

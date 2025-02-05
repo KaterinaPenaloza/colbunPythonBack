@@ -1,0 +1,204 @@
+pipeline {
+    agent any
+
+    parameters {
+        string(name: 'name_container', defaultValue: 'felipemoralescybertrust', description: 'nombre del docker')
+        string(name: 'name_imagen_front', defaultValue: 'chatbotcybertrustfront', description: 'nombre de la imagen del front')
+        string(name: 'tag_imagen', defaultValue: 'latest', description: 'etiqueta de la imagen')
+        string(name: 'name_imagen_back', defaultValue: 'chatbotcybertrustback', description: 'nombre de la imagen del back')
+    }
+
+    environment {
+        name_final_front = "${name_container}/${name_imagen_front}:${tag_imagen}"
+        name_final_back = "${name_container}/${name_imagen_back}:${tag_imagen}"
+    }
+
+    stages {
+        stage('Detener/Eliminar FrontEnd') {
+            steps {
+                script {
+                    //Eliminando contenedores
+                    def containerExists = sh(script: "docker ps -q --filter name=${name_imagen_front}", returnStdout: true).trim()
+                    if (containerExists.isEmpty()) {
+                        echo "El contenedor ${name_imagen_front} no existe. Continuar con Jenkins."                        
+                    }
+                    else {
+                        sh "docker stop ${name_imagen_front} || true"
+                        sh "docker rm ${name_imagen_front} || true"
+                    }
+                    //Eliminando imagenes
+                    def imageExists = sh(script: "docker images --filter reference=${name_container}/${name_imagen_front}", returnStdout: true).trim()
+                    if(imageExists.isEmpty()){
+                        echo "La imagen ${name_container}/${name_imagen_front} no existe, continuar con Jenkins."
+                    }
+                    else{
+                        sh "docker rmi ${name_container}/${name_imagen_front}"
+                    }
+                }
+            }
+        }
+
+        stage('Detener/Eliminar BackEnd') {
+            steps {
+                script {
+                    //Eliminando contenedores
+                    def containerExists = sh(script: "docker ps -q --filter name=${name_imagen_back}", returnStdout: true).trim()
+                    if (containerExists.isEmpty()) {
+                        echo "El contenedor ${name_imagen_back} no existe. Continuar con Jenkins."
+                    }
+                    else {
+                        sh "docker stop ${name_imagen_back} || true"
+                        sh "docker rm ${name_imagen_back} || true"
+                    }
+                    //Eliminando imagenes
+                    def imageExists = sh(script: "docker images --filter reference=${name_container}/${name_imagen_back}", returnStdout: true).trim()
+                    if(imageExists.isEmpty()){
+                        echo "La imagen ${name_container}/${name_imagen_back} no existe, continuar con Jenkins."
+                    }
+                    else{
+                        sh "docker rmi ${name_container}/${name_imagen_back}"
+                    }
+                }
+            }
+        }
+        stage('Detener/Eliminar Contenedor Proxy'){
+            steps{
+                script{
+                    def containerExists = sh(script: "docker ps -a --filter name=nginx-proxy", returnStdout: true).trim()
+                    if(containerExists.isEmpty()){
+                        echo "El contenedor nginx-proxy no existe. Continuar con Jenkins."
+                    }
+                    else {
+                        sh "docker stop nginx-proxy || true"
+                        sh "docker rm nginx-proxy || true"
+                        sh "docker rmi jwilder/nginx-proxy || true"
+                    }
+                }
+            }
+        }
+        stage('Eliminar Network Nginx-Proxy'){
+            steps{
+                script{
+                    def networkExists = sh(script: "docker network ls --filter name=nginx-proxy --format '{{.Name}}'", returnStdout: true).trim()
+                    if(networkExists.isEmpty()){
+                        echo "La red Nginx-Proxy no existe. Continuar con Jenkins."
+                    }
+                    else{
+                        sh "docker network rm ${networkExists} || true"
+                    }
+                }
+            }
+        }
+
+        /* //analisis con sonar cloud comentado hasta poder tener cuenta premium.
+        stage('Verificar Repo 1') {
+            steps {
+                checkout([$class: 'GitSCM',
+                    branches: [[name: 'main']], //modificar main por "* / main" sin espacios
+                    doGenerateSubmoduleConfigurations: false, 
+                    extensions: [], 
+                    submoduleCfg: [], 
+                    userRemoteConfigs: [[credentialsId: 'PAT_jenkins', url: 'https://github.com/KaterinaPenaloza/ChatbotCybertrust-front.git']]])
+            }
+        }
+        
+        stage('Analisis FrontEnd') {
+            steps {
+                script {
+                    def scannerHome = tool 'sonar-scanner';
+                    withSonarQubeEnv('SonarCloud') {
+                        withCredentials([string(credentialsId:'SonarToJenkins',variable: 'SonarToJenkins')])
+                            sh "${scannerHome}/bin/sonar-scanner \
+                            -Dsonar.organization= \
+                            -Dsonar.projectKey= \
+                            -Dsonar.sources=. \
+                            -Dsonar.host.url=https://sonarcloud.io \
+                            -Dsonar.login=${SonarToJenkins}"
+                        }
+                }
+            }
+        }
+        //probar quality gate en la instancia
+        stage('Quality Gate FrontEnd') {
+            steps {
+                timeout(time: 1, unit: 'HOURS') {
+                    waitForQualityGate abortPipeline: true
+                }
+            }
+        }
+        */
+        stage('Construir FrontEnd') {
+            steps {
+                script {
+                    withCredentials([string(credentialsId: 'IDKATERINA', variable: 'USUARIO'),
+                                     string(credentialsId: 'TOKENKATERINA', variable: 'CONTRASENA')]) {
+                        sh "docker build -t ${name_final_front} https://${USUARIO}:${CONTRASENA}@github.com/KaterinaPenaloza/ChatbotCybertrust-front.git"
+                    }
+                }
+            }
+        }
+        /*
+        stage('Verificar BackEnd') {
+            steps {
+                checkout([$class: 'GitSCM',
+                    branches: [[name: 'main']], //modificar main por "* / main" sin espacios
+                    doGenerateSubmoduleConfigurations: false, 
+                    extensions: [], 
+                    submoduleCfg: [], 
+                    userRemoteConfigs: [[credentialsId: 'PAT_jenkins', url: 'https://github.com/KaterinaPenaloza/ChatbotCybertrust-back.git']]])
+            }
+        }
+        stage('Analisis BackEnd') {
+            steps {
+                script {
+                    def scannerHome = tool 'sonar-scanner';
+                    withSonarQubeEnv('SonarCloud') {
+                        withCredentials([string(credentialsId:'SonarToJenkins',variable: 'SonarToJenkins')])
+                            sh "${scannerHome}/bin/sonar-scanner \
+                            -Dsonar.organization= \
+                            -Dsonar.projectKey= \
+                            -Dsonar.sources=. \
+                            -Dsonar.host.url=https://sonarcloud.io \
+                            -Dsonar.login=${SonarToJenkins}"
+                        }
+                }
+            }
+        }
+        stage('Quality Gate BackEnd') {
+            steps {
+                timeout(time: 1, unit: 'HOURS') {
+                    waitForQualityGate abortPipeline: true
+                }
+            }
+        }
+        */
+
+        stage('Construir BackEnd') {
+            steps {
+                script {
+                    withCredentials([string(credentialsId: 'IDKATERINA', variable: 'USUARIO'),
+                                     string(credentialsId: 'TOKENKATERINA', variable: 'CONTRASENA')]) {
+                        sh "docker build -t ${name_final_back} https://${USUARIO}:${CONTRASENA}@github.com/KaterinaPenaloza/ChatbotCybertrust-back.git"
+                    }
+                }
+            }
+        }
+        stage('Creando RedProxy'){
+            steps{
+                script{
+                    sh "docker network create nginx-proxy || true"
+                }
+            }
+        }
+
+        stage('Desplegar Chatbot') {
+            steps {
+                script {                    
+                    dir('/var/lib/jenkins/jobs/Chatbot_Cybertrust') {
+                        sh 'docker-compose -f docker-compose.yml up -d'
+                    }
+                }
+            }
+        }
+    }
+}
