@@ -131,6 +131,7 @@ body, html {
 
 
 /********* Cuerpo del Chat *********/
+/* Contenedor principal */
 .chat-app {
   display: flex;
   flex-direction: column;
@@ -141,6 +142,7 @@ body, html {
   margin: 0;
 }
 
+/* Contenedor del historial de chat */
 .chat-history-container {
   flex-grow: 1;
   width: 100%;
@@ -150,6 +152,7 @@ body, html {
   margin-right: 50px;
 }
 
+/* Lista de historial de chat */
 .chat-history {
   list-style-type: none;
   padding: 0;
@@ -198,7 +201,7 @@ body, html {
   animation: slideUp 0.7s ease;
 }
 
-
+/* Botones de pregunta */
 .question-buttons {
   background-color: rgba(255, 128, 49, 0.8);
   color: #ffffff;
@@ -268,13 +271,14 @@ body, html {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
+
 /* Temas */
 .menu-temas {
   display: flex;
   align-items: center;
   justify-content: center;
   width: 100%;
-  padding: 24px;
+  padding: 16px;
   margin: 16px 0;
   background-color: rgba(255, 205, 0, 1);
   color: #333333;
@@ -286,39 +290,6 @@ body, html {
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
-.theme-button {
-  background-color: rgba(54, 98, 178, 1);
-  color: #ffffff;
-  padding: 8px 16px;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  font-size: 16px;
-  text-align: center;
-  transition: transform 0.2s, background-color 0.2s, box-shadow 0.2s;
-  width: 100%;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-.theme-button:hover {
-  background-color: rgba(54, 98, 178, 0.9);
-  transform: scale(1.05);
-  box-shadow: 0 6px 10px rgba(0, 0, 0, 0.2);
-}
-
-/* Contenedor general de temas */
-.theme-buttons-list {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 16px;
-  margin: 16px auto;
-  background-color: rgba(0, 0, 0, 0);
-  border-radius: 6px;
-  max-width: 600px;
-}
-
-/* Botones de temas y opciones */
 .theme-button, .opciones-buttons {
   background-color: rgba(54, 98, 178, 1);
   color: #ffffff;
@@ -327,15 +298,15 @@ body, html {
   border-radius: 8px;
   cursor: pointer;
   font-size: 16px;
-  width: 100%;
-  max-width: 400px;
   text-align: center;
   white-space: nowrap;
   box-shadow: 
     inset 0 -2px 4px rgba(0, 0, 0, 0.2), 
     0 4px 8px rgba(0, 0, 0, 0.2);
   transition: transform 0.2s, background-color 0.2s, box-shadow 0.2s;
-  margin-bottom: 16px;
+  margin-bottom: 12px; /* Unificado */
+  width: 100%; 
+  max-width: 400px;
 }
 
 .theme-button:hover, .opciones-buttons:hover {
@@ -349,9 +320,15 @@ body, html {
   margin-right: 16px;
 }
 
-.theme-button:hover, .opciones-buttons:hover {
-  background-color: rgba(54, 98, 178, 0.9);
-  transform: scale(1.05);
+.theme-buttons-list {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  margin: 8px auto;
+  background-color: rgba(0, 0, 0, 0);
+  border-radius: 6px;
+  max-width: 600px;
 }
 
 .reset-button {
