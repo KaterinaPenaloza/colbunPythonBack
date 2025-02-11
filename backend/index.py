@@ -19,7 +19,7 @@ OVERLAP_SIZE = 150
 
 # Prompt optimizado
 prompt = ChatPromptTemplate.from_template(
-    """Responde estrictamente basándote en los documentos proporcionados:
+    """Responde muy brevemente, estrictamente basándote en los documentos proporcionados:
     Contexto: {context}
     Pregunta: {question}
     Respuesta:"""
