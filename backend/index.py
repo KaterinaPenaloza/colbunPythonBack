@@ -14,12 +14,12 @@ dotenv.load_dotenv()
 
 # Configuraciones
 VECTOR_STORE_PATH = "./faiss_index"
-MAX_CHUNK_SIZE = 700
+MAX_CHUNK_SIZE = 600
 OVERLAP_SIZE = 150
 
 # Prompt optimizado
 prompt = ChatPromptTemplate.from_template(
-    """Responde muy brevemente, estrictamente basándote en los documentos proporcionados:
+    """Eres un asistente encargado de ayudar a usuarios a crear órdenes de compra, bp, solicitud de pedidos, bpa, etc, en SAP. Responde brevemente, en español, siendo amable y estrictamente basándote en los documentos proporcionados:
     Contexto: {context}
     Pregunta: {question}
     Respuesta:"""
@@ -76,7 +76,8 @@ def crear_cadena_qa(vector_store):
     # Modelo de chat
     model = ChatFireworks(
         api_key=os.getenv("FIREWORKS_API_KEY"),
-        model="accounts/fireworks/models/llama-v3p2-3b-instruct",
+        #model="accounts/fireworks/models/llama-v3p2-3b-instruct", #10s
+        model="accounts/fireworks/models/llama-v3p1-8b-instruct", #8s
         temperature=0.5
     )
 
@@ -104,22 +105,15 @@ def crear_cadena_qa(vector_store):
 
 def procesar_pregunta(chain, pregunta):
     """Procesar pregunta y obtener respuesta"""
-    inicio = time.time()
-    
     try:
         resultado = chain.invoke({"query": pregunta})
         
-        fin = time.time()
-        tiempo_respuesta = fin - inicio
-        
         return {
             "respuesta": resultado.get('result', 'No pude encontrar una respuesta.'),
-            "tiempo": tiempo_respuesta
         }
     except Exception as error:
         return {
             "respuesta": f"Error al procesar la pregunta: {str(error)}",
-            "tiempo": time.time() - inicio
         }
 
 def run(pregunta):

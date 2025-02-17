@@ -15,7 +15,7 @@ const SendMessageComponent = ({ userQuestion, onInputChange, onSendMessage, onIn
                     className="chat-input"
                 />
                 <button type="submit" className="send-button">
-                    <Icon icon="ic:round-send" /> {/* Usando un icono de envío */}
+                    <Icon icon="ic:round-send" />
                 </button>
             </form>
         </div>

@@ -16,7 +16,9 @@ const ChatComponent = () => {
   const [selectedTheme, setSelectedTheme] = useState(''); // Tema seleccionado
   const [initialGreetingSent, setInitialGreetingSent] = useState(false);  // El primer mensaje
   const [loading, setLoading] = useState(false); // Estado de carga (cargando respuesta)
-  const [showModal, setShowModal] = useState(false);  // Mostrar Información adicional
+
+
+
 
 
   // Preguntas por tema
@@ -37,18 +39,9 @@ const ChatComponent = () => {
       "¿Cuáles son los pasos del Instructivo BOFA?"
     ],
     instructivo_solped: [
-      "¿Cuáles son los pasos del Instructivo BP?"
+      "¿Cuáles son los pasos del Instructivo SOLPED?"
     ]
     // Agregar más temas y preguntas aqui
-  };
-
-
-  // Botón de ayuda con información
-  const handleHelpClick = () => {
-    setShowModal(true);
-  };
-  const handleCloseModal = () => {
-    setShowModal(false);
   };
 
   // Redirigir al usuario a la página de inicio
@@ -64,7 +57,6 @@ const ChatComponent = () => {
     }
     chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
   };
-
 
   // Manejo de mensajes
   const handleSendMessage = async (e) => {
@@ -108,7 +100,6 @@ const ChatComponent = () => {
       setLoading(false);
     }
   };
-
 
   //Función de enviar mensaje, pero con las preguntas predefinidas
   const handleQuestionSelection = async (question) => {
@@ -155,14 +146,12 @@ const ChatComponent = () => {
     }
   };
 
-
   // Manejo de temas
   const handleQuestionListByTheme = (theme) => {
     setQuestions(questionSets[theme]);
     setAskingForAnotherQuestion(false);
     setSelectedTheme(theme);
   };
-
 
   const handleThemeSelection = async (theme) => {
     setSelectedTheme(theme);
@@ -172,7 +161,6 @@ const ChatComponent = () => {
     ]);
     chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
   };
-
 
   const handleThemeList = () => {
     setQuestions([]);
@@ -204,8 +192,6 @@ const ChatComponent = () => {
     };
     setChatHistory([greetingMessage]);
   };
-
-
 
   // Técnicamente aquí esta toda la página
   useEffect(() => {
@@ -279,6 +265,12 @@ const ChatComponent = () => {
       setSelectedTheme(null);
       chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
     }
+    
+    // Scroll al final del chat cada vez que se actualiza chatHistory
+    if (chatContainerRef.current) {
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+    }
+
     return () => {
       document.removeEventListener('contextmenu', handleContextMenu);
     };
@@ -293,6 +285,7 @@ const ChatComponent = () => {
   return (
     <div className="chat-app">
       {/* Container historial */}
+
       <div className="chat-history-container" ref={chatContainerRef}>
         <ul className="chat-history">
           {/* Intercambio de mensajes */}
