@@ -14,10 +14,8 @@ const ChatComponent = () => {
   const [askingForAnotherQuestion, setAskingForAnotherQuestion] = useState(false); // Estado para hacer otra pregunta
   const [questions, setQuestions] = useState([]); // Set de preguntas predefinidas
   const [selectedTheme, setSelectedTheme] = useState(''); // Tema seleccionado
-  const [initialGreetingSent, setInitialGreetingSent] = useState(false);  // El primer mensaje
+  const [initialGreetingSent, setInitialGreetingSent] = useState(false);  // El primer mensaje (saludo inicial)
   const [loading, setLoading] = useState(false); // Estado de carga (cargando respuesta)
-
-
 
 
 
@@ -44,32 +42,51 @@ const ChatComponent = () => {
     // Agregar más temas y preguntas aqui
   };
 
-  // Redirigir al usuario a la página de inicio
+  // Redirigir a la página de inicio
   const handleHome = () => {
     window.location.href = "/";
   };
 
-  // Para enviar la pregunta pulsando "Enter"
-  const handleInputKeyDown = (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      sendMessage();
-    }
-    chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+  // Desactivar contextmenu
+  const handleContextMenu = (event) => {
+    event.preventDefault();
   };
 
+  /*********** Mensajes **********/
   // Manejo de mensajes
-  const handleSendMessage = async (e) => {
-    e.preventDefault();
-    await sendMessage();
+  const handleSendMessage = async (selectedInstructivo) => {
+    if (!userQuestion.trim()) {
+      return;
+    }
+    let finalQuestion = userQuestion;
+    if (selectedInstructivo) {
+      finalQuestion = `En el instructivo ${selectedInstructivo}, ${userQuestion}`;
+    }
+
+    try {
+      setUserQuestion('');
+      setLoading(true);
+      const newChatHistory = [...chatHistory, { user: finalQuestion }];
+      setChatHistory(newChatHistory);
+      const res = await axios.post(apiUrl, { query: finalQuestion });
+      console.log('Respuesta del servidor:', res.data);
+      let botResponse = res.data && res.data.text ? res.data.text : 'Respuesta no reconocida';
+      const updatedChatHistory = [...newChatHistory, { bot: botResponse }];
+      setChatHistory(updatedChatHistory);
+      chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
+    } catch (error) {
+      // ... (manejo de errores)
+    } finally {
+      setLoading(false);
+    }
   };
 
   //Función de enviar mensaje, preguntas libres
   const sendMessage = async () => {
-    //Evitar enviar mensajes vacios
     if (!userQuestion.trim()) {
       return;
     }
+
     try {
       setUserQuestion('');
       setLoading(true);
@@ -146,7 +163,7 @@ const ChatComponent = () => {
     }
   };
 
-  // Manejo de temas
+  /********** Temas **********/
   const handleQuestionListByTheme = (theme) => {
     setQuestions(questionSets[theme]);
     setAskingForAnotherQuestion(false);
@@ -174,7 +191,7 @@ const ChatComponent = () => {
           <p>¿Sobre qué tema te gustaría tratar ahora?</p>
           <ul className="theme-buttons-list">
             <button className="theme-button" onClick={() => handleThemeSelection("instructivo")}>
-              Instructivo OC
+              Instructivo RPA
             </button>
             <button className="theme-button" onClick={() => handleThemeSelection("instructivo_bp")}>
               Instructivo BP
@@ -193,9 +210,10 @@ const ChatComponent = () => {
     setChatHistory([greetingMessage]);
   };
 
-  // Técnicamente aquí esta toda la página
+
+  /********** Estructura de la pagina **********/
   useEffect(() => {
-    document.title = 'Chatbot';  // Título de la página
+    document.title = 'Chatbot';
     // Desactivar el menú contextual en toda la página
     document.addEventListener('contextmenu', handleContextMenu);
     // Manejar seleccion de temas
@@ -216,11 +234,11 @@ const ChatComponent = () => {
         {
           bot: (
             <div style={{ textAlign: 'center' }}>
-              <p>Hola, soy tu asistente virtual ...</p>
+              <p>Hola, soy tu asistente virtual para ayudarte con</p>
               <ul className="theme-buttons-list">
                 <button className="theme-button"
                   onClick={() => handleThemeSelection("instructivo")}>
-                  Instructivo OC
+                  Instructivo RPA
                 </button>
 
                 <button className="theme-button"
@@ -265,27 +283,20 @@ const ChatComponent = () => {
       setSelectedTheme(null);
       chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
     }
-    
-    // Scroll al final del chat cada vez que se actualiza chatHistory
     if (chatContainerRef.current) {
       chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight;
     }
-
     return () => {
       document.removeEventListener('contextmenu', handleContextMenu);
     };
   }, [chatHistory, initialGreetingSent, selectedTheme, questions]);
 
-  // Función para manejar el evento contextmenu y prevenir su acción por defecto
-  const handleContextMenu = (event) => {
-    event.preventDefault();
-  };
 
-  // Estructura de la página, como el html pero en react
+
+  // JSX
   return (
     <div className="chat-app">
       {/* Container historial */}
-
       <div className="chat-history-container" ref={chatContainerRef}>
         <ul className="chat-history">
           {/* Intercambio de mensajes */}
@@ -306,7 +317,7 @@ const ChatComponent = () => {
         userQuestion={userQuestion}
         onInputChange={(e) => setUserQuestion(e.target.value)}
         onSendMessage={handleSendMessage}
-        onInputKeyDown={handleInputKeyDown}
+        sendMessage={sendMessage}
       />
     </div>
   );

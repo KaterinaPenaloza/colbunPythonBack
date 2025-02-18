@@ -1,25 +1,35 @@
-import React from 'react';
+import React, { useState } from 'react'; // Importa useState aquí
 import { Icon } from '@iconify/react';
 import Modal from './Modal';
 import './App.css';
 
-const ChatHeaderComponent = ({ onHome, onInfo, showModal, onCloseModal }) => {
+const ChatHeaderComponent = ({ onHome }) => {
+    const [showModal, setShowModal] = useState(false); // Mueve el estado aquí
+
+    const handleHelpClick = () => {
+        setShowModal(true);
+    };
+
+    const handleCloseModal = () => {
+        setShowModal(false);
+    };
+
     return (
-        <div className="chat-header-banner"> {/* Reemplaza chat-header-container con chat-header-banner */}
+        <div className="chat-header-banner">
             <div className="chat-header-content">
                 <a href="/">
-                    <img src="/logo.png" alt="Logo" className="logo-image" /> {/* logo-image ya coincide */}
+                    <img src="/Logo.png" alt="Logo" className="logo-image"/>
                 </a>
-                <div className="button-container right-align"> {/* Reemplaza chat-header-buttons con button-container y right-align */}
+                <div className="button-container right-align">
                     <button className="home-button" onClick={onHome}>
                         <Icon icon="material-symbols:home" />
                     </button>
-                    <button className="info-button" onClick={onInfo}> 
+                    <button className="info-button" onClick={handleHelpClick}>
                         <Icon icon="material-symbols:info" />
                     </button>
                 </div>
+                {showModal && <Modal onClose={handleCloseModal} />}
             </div>
-            {showModal && <Modal onClose={onCloseModal} />}
         </div>
     );
 };

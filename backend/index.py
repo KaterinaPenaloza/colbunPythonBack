@@ -1,5 +1,4 @@
 import os
-import time
 import dotenv
 from langchain_community.vectorstores import FAISS
 from langchain_fireworks import FireworksEmbeddings
@@ -19,7 +18,7 @@ OVERLAP_SIZE = 150
 
 # Prompt optimizado
 prompt = ChatPromptTemplate.from_template(
-    """Eres un asistente encargado de ayudar a usuarios a crear órdenes de compra, bp, solicitud de pedidos, bpa, etc, en SAP. Responde brevemente, en español, siendo amable y estrictamente basándote en los documentos proporcionados:
+    """Eres un asistente encargado de ayudar a usuarios a crear órdenes de compra, bp, solicitud de pedidos, bofa, con rpa en SAP. Responde brevemente, en español, siendo amable, saludando y estrictamente basándote en los documentos proporcionados:
     Contexto: {context}
     Pregunta: {question}
     Respuesta:"""
@@ -76,9 +75,9 @@ def crear_cadena_qa(vector_store):
     # Modelo de chat
     model = ChatFireworks(
         api_key=os.getenv("FIREWORKS_API_KEY"),
-        #model="accounts/fireworks/models/llama-v3p2-3b-instruct", #10s
-        model="accounts/fireworks/models/llama-v3p1-8b-instruct", #8s
-        temperature=0.5
+        model="accounts/fireworks/models/llama-v3p1-8b-instruct",
+        temperature=0.7,
+        max_tokens=600,
     )
 
     # Configurar retriever
@@ -100,11 +99,9 @@ def crear_cadena_qa(vector_store):
         },
         return_source_documents=False
     )
-
     return chain
 
 def procesar_pregunta(chain, pregunta):
-    """Procesar pregunta y obtener respuesta"""
     try:
         resultado = chain.invoke({"query": pregunta})
         
@@ -117,7 +114,9 @@ def procesar_pregunta(chain, pregunta):
         }
 
 def run(pregunta):
-    """Función que permite conectar el backend Flask"""
+    if len(pregunta) > 300:
+        return "La pregunta excede el límite de 300 caracteres."
+
     documentos = cargar_documentos_pdf("./documents")
     
     if not documentos:
@@ -125,6 +124,5 @@ def run(pregunta):
     
     vector_store = preparar_vector_store(documentos)
     chain = crear_cadena_qa(vector_store)
-    
     resultado = procesar_pregunta(chain, pregunta)
     return resultado['respuesta']
