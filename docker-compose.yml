@@ -5,8 +5,10 @@ services:
     image: katerinapenaloza/chatbot-backend:latest
     ports:
       - "80:80"
+    networks:
+      - my-network  # Conectar a la red personalizada
     env_file:
-      - ./backend/.env 
+      - ./backend/.env
 
   frontend:
     image: katerinapenaloza/chatbot-frontend:latest
@@ -14,3 +16,9 @@ services:
       - "81:81"
     depends_on:
       - backend
+    networks:
+      - my-network  # Conectar a la red personalizada
+
+networks:
+  my-network:
+    driver: bridge  # Tipo de red para la comunicación entre contenedores
