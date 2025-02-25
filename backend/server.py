@@ -1,11 +1,13 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-from index import run  # Importa la función que ejecuta la lógica del chatbot
+from index import run
 
 app = Flask(__name__)
 
 # Configurar CORS para manejar solicitudes de origen cruzado
-CORS(app, origins="http://localhost:81", methods=["GET", "POST"], allow_headers=["Content-Type", "Authorization"])
+#CORS(app, origins="http://localhost:81", methods=["GET", "POST"], allow_headers=["Content-Type", "Authorization"])
+CORS(app, origins="http://frontend:81", methods=["GET", "POST"], allow_headers=["Content-Type", "Authorization"])
+
 
 @app.route('/chat', methods=['POST'])
 def chat():
@@ -15,7 +17,7 @@ def chat():
     try:
         # Ejecutar la función de procesamiento del chatbot
         response = run(user_question)
-        return jsonify({"text": response})  # Enviar la respuesta generada
+        return jsonify({"text": response})
 
     except Exception as error:
         print(f'Error durante el procesamiento del chat: {error}')

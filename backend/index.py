@@ -76,7 +76,7 @@ def crear_cadena_qa(vector_store):
     model = ChatFireworks(
         api_key=os.getenv("FIREWORKS_API_KEY"),
         model="accounts/fireworks/models/llama-v3p1-8b-instruct",
-        temperature=0.7,
+        temperature=0.,
         max_tokens=600,
     )
 
