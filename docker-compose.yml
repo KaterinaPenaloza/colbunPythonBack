@@ -2,19 +2,15 @@ version: '3.8'
 
 services:
   backend:
-    build:
-      context: ./backend
+    image: katerinapenaloza/chatbot-backend:latest
     ports:
       - "80:80"
     env_file:
       - ./backend/.env 
-    volumes:
-      - ./backend:/app   # Opcional: monta tu código para desarrollo en vivo
-  
+
   frontend:
-    build:
-      context: ./frontend
+    image: katerinapenaloza/chatbot-frontend:latest
     ports:
       - "81:81"
     depends_on:
-      - backend    # Asegura que el frontend espere a que el backend esté listo
+      - backend

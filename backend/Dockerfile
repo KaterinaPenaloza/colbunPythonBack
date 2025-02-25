@@ -5,13 +5,13 @@ FROM python:3.11-slim
 WORKDIR /app
 
 # Copiamos los archivos necesarios
-COPY ./backend /app
+COPY . /app
 
 # Instalamos dependencias (cuando tengas el requirements.txt)
-# RUN pip install -r requirements.txt
+RUN pip install -r requirements.txt
 
 # Para probar, instalamos Flask directamente
-RUN pip install flask
+#RUN pip install flask
 
 # Exponemos el puerto 80
 EXPOSE 80
