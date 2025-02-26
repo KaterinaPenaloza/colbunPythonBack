@@ -7,7 +7,8 @@ import { PulseLoader } from 'react-spinners';
 import { Icon } from '@iconify/react';
 
 const ChatComponent = () => {
-  const apiUrl = 'http://backend:80/chat';  // URL de la página (el dominio donde está alojado el back)
+  const apiUrl = 'http://localhost:80/chat';
+  //const apiUrl = 'http://backend:80/chat';  // URL de la página (el dominio donde está alojado el back)
   const chatContainerRef = useRef(null);
   const [chatHistory, setChatHistory] = useState([]); // Historial del chat
   const [userQuestion, setUserQuestion] = useState(''); // Contiene la pregunta del usuario

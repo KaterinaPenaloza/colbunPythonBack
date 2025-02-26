@@ -5,9 +5,9 @@ from index import run
 app = Flask(__name__)
 
 # Configurar CORS para manejar solicitudes de origen cruzado
-#CORS(app, origins="http://localhost:81", methods=["GET", "POST"], allow_headers=["Content-Type", "Authorization"])
-CORS(app, origins="*", methods=["GET", "POST"], allow_headers=["Content-Type", "Authorization"])
-
+CORS(app, origins="http://localhost:81", methods=["GET", "POST"], allow_headers=["Content-Type", "Authorization"])
+#CORS(app, origins="*", methods=["GET", "POST"], allow_headers=["Content-Type", "Authorization"])
+#CORS(app, resources={r"/chat": {"origins": "*", "methods": ["GET", "POST"], "allow_headers": ["Content-Type", "Authorization"]}})
 
 
 @app.route('/chat', methods=['POST'])
