@@ -9,7 +9,6 @@ const Modal = ({ onClose }) => {
             Recuerda que puedes seleccionar las preguntas predefinidas del tema elegido o hacer tus propias preguntas!<br/ >
             Luego de recibir tu respuesta, puedes volver a seleccionar otra pregunta del mismo tema o volver para seleccionar otro tema.<br/ >
             Si tienes un error mientras se genera la respuesta, pulsa el botón de reinicio para volver al inicio.
-            Úsalo con responsabilidad :)
         </p>
         <p>Para más información, por favor contactarse a [correo@example.com]</p>
         <button onClick={onClose}>Cerrar</button>

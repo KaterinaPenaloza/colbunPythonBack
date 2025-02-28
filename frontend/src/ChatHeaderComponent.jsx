@@ -1,10 +1,10 @@
-import React, { useState } from 'react'; // Importa useState aquí
+import React, { useState } from 'react';
 import { Icon } from '@iconify/react';
 import Modal from './Modal';
 import './App.css';
 
 const ChatHeaderComponent = ({ onHome }) => {
-    const [showModal, setShowModal] = useState(false); // Mueve el estado aquí
+    const [showModal, setShowModal] = useState(false);
 
     const handleHelpClick = () => {
         setShowModal(true);

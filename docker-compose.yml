@@ -6,7 +6,7 @@ services:
     ports:
       - "80:80"
     networks:
-      - my-network  # Conectar a la red personalizada
+      - my-network
     env_file:
       - ./backend/.env
 
@@ -17,8 +17,8 @@ services:
     depends_on:
       - backend
     networks:
-      - my-network  # Conectar a la red personalizada
+      - my-network
 
 networks:
   my-network:
-    driver: bridge  # Tipo de red para la comunicación entre contenedores
+    driver: bridge

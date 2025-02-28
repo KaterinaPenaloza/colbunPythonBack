@@ -16,15 +16,18 @@ VECTOR_STORE_PATH = "./faiss_index"
 MAX_CHUNK_SIZE = 600
 OVERLAP_SIZE = 150
 
-# Prompt optimizado
+# Prompt
 prompt = ChatPromptTemplate.from_template(
-    """Eres un asistente encargado de ayudar a usuarios a crear órdenes de compra, bp, solicitud de pedidos, bofa, con rpa en SAP. Responde brevemente, en español, siendo amable, saludando y estrictamente basándote en los documentos proporcionados:
+    """Eres un asistente encargado de ayudar a usuarios a crear órdenes de compra, bp, solicitud de pedidos, 
+    bofa, con rpa en SAP. Responde brevemente, en español, siendo amable, saludando y estrictamente basándote
+    en los documentos proporcionados:
     Contexto: {context}
     Pregunta: {question}
     Respuesta:"""
 )
 
 def cargar_documentos_pdf(ruta_directorio):
+
     """Cargar documentos PDF de un directorio"""
     documentos = []
     try:
@@ -76,7 +79,7 @@ def crear_cadena_qa(vector_store):
     model = ChatFireworks(
         api_key=os.getenv("FIREWORKS_API_KEY"),
         model="accounts/fireworks/models/llama-v3p1-8b-instruct",
-        temperature=0.,
+        temperature=0.6,
         max_tokens=600,
     )
 

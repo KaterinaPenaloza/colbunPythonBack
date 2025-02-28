@@ -235,7 +235,7 @@ const ChatComponent = () => {
         {
           bot: (
             <div style={{ textAlign: 'center' }}>
-              <p>Hola, soy tu asistente virtual para ayudarte con</p>
+              <p>Hola, soy tu asistente virtual para ayudarte con información de los instructivos de los procesos, puedes seleccionar preguntas predefinidas por tema o hacer tus propias preguntas!</p>
               <ul className="theme-buttons-list">
                 <button className="theme-button"
                   onClick={() => handleThemeSelection("instructivo")}>

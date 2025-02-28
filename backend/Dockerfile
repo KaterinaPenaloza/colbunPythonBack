@@ -1,20 +1,15 @@
-# Usamos la imagen oficial de Python
 FROM python:3.11-slim
 
-# Establecemos el directorio de trabajo
+# Directorio de trabajo
 WORKDIR /app
 
-# Copiamos los archivos necesarios
 COPY . /app
 
-# Instalamos dependencias (cuando tengas el requirements.txt)
+# Instalación de dependencias
 RUN pip install -r requirements.txt
 
-# Para probar, instalamos Flask directamente
-#RUN pip install flask
-
-# Exponemos el puerto 80
+# Puerto 80
 EXPOSE 80
 
-# Corremos el server.py
+# Iniciar server.py
 CMD ["python", "server.py"]
