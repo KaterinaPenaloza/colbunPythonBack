@@ -1,8 +1,8 @@
 import os
 import dotenv
+import logging
 from langchain_community.vectorstores import FAISS
-from langchain_fireworks import FireworksEmbeddings
-from langchain_fireworks import ChatFireworks
+from langchain_openai import AzureOpenAIEmbeddings, AzureChatOpenAI
 from langchain.chains import RetrievalQA
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_community.document_loaders import PyPDFLoader
@@ -11,23 +11,30 @@ from langchain_text_splitters import RecursiveCharacterTextSplitter
 # Cargar variables de entorno
 dotenv.load_dotenv()
 
-# Configuraciones
+# Configuraciones de Azure OpenAI
+AZURE_OPENAI_API_KEY = os.getenv("AZURE_OPENAI_API_KEY")
+AZURE_OPENAI_API_INSTANCE = os.getenv("AZURE_OPENAI_API_INSTANCE_NAME")
+AZURE_OPENAI_API_DEPLOYMENT = os.getenv("AZURE_OPENAI_API_DEPLOYMENT_NAME")
+AZURE_OPENAI_API_VERSION = os.getenv("AZURE_OPENAI_API_VERSION")
+AZURE_OPENAI_EMBEDDING_DEPLOYMENT = os.getenv("AZURE_OPENAI_EMBEDDING_DEPLOYMENT_NAME")
+
+
+
 VECTOR_STORE_PATH = "./faiss_index"
-MAX_CHUNK_SIZE = 600
-OVERLAP_SIZE = 150
+MAX_CHUNK_SIZE = 300
+OVERLAP_SIZE = 100
 
 # Prompt
 prompt = ChatPromptTemplate.from_template(
-    """Eres un asistente encargado de ayudar a usuarios a crear órdenes de compra, bp, solicitud de pedidos, 
-    bofa, con rpa en SAP. Responde brevemente, en español, siendo amable, saludando y estrictamente basándote
-    en los documentos proporcionados:
+    """Eres un asistente experto en órdenes de compra, BP, solicitud de pedidos y BOFA en SAP con RPA. 
+    Responde brevemente, en español, saludando y basándote solo en los documentos proporcionados:
+
     Contexto: {context}
     Pregunta: {question}
     Respuesta:"""
 )
 
 def cargar_documentos_pdf(ruta_directorio):
-
     """Cargar documentos PDF de un directorio"""
     documentos = []
     try:
@@ -42,19 +49,27 @@ def cargar_documentos_pdf(ruta_directorio):
         return []
 
 def preparar_vector_store(documentos):
-    """Preparar vector store con documentos"""
-    # Dividir documentos en fragmentos
+    """Preparar vector store con documentos y embeddings de Azure"""
     text_splitter = RecursiveCharacterTextSplitter(
         chunk_size=MAX_CHUNK_SIZE,
         chunk_overlap=OVERLAP_SIZE
     )
     split_docs = text_splitter.split_documents(documentos)
 
-    # Crear embeddings
-    embeddings = FireworksEmbeddings(
-        api_key=os.getenv("FIREWORKS_API_KEY"),
-        model="nomic-ai/nomic-embed-text-v1.5"
+    # Embeddings con Azure OpenAI
+    embeddings = AzureOpenAIEmbeddings(
+        azure_deployment=AZURE_OPENAI_EMBEDDING_DEPLOYMENT,
+        azure_endpoint=AZURE_OPENAI_API_INSTANCE,
+        api_key=AZURE_OPENAI_API_KEY,
+        api_version=AZURE_OPENAI_API_VERSION
     )
+    try:
+        test_embedding = embeddings.embed_query("prueba")
+        logging.info(f"Embeddings generados correctamente: {test_embedding[:5]}")  # Muestra los primeros valores
+    except Exception as e:
+        logging.error(f"Error al generar embeddings: {e}", exc_info=True)
+        raise
+    
 
     # Crear o cargar vector store
     if os.path.exists(VECTOR_STORE_PATH):
@@ -74,58 +89,110 @@ def preparar_vector_store(documentos):
     return vector_store
 
 def crear_cadena_qa(vector_store):
-    """Crear cadena de recuperación de preguntas y respuestas"""
-    # Modelo de chat
-    model = ChatFireworks(
-        api_key=os.getenv("FIREWORKS_API_KEY"),
-        model="accounts/fireworks/models/llama-v3p1-8b-instruct",
-        temperature=0.6,
-        max_tokens=600,
-    )
+    """Crear la cadena de preguntas y respuestas con Azure OpenAI"""
+    try:
+        # Configuración del modelo
+        model = AzureChatOpenAI(
+            azure_deployment=AZURE_OPENAI_API_DEPLOYMENT,
+            azure_endpoint=AZURE_OPENAI_API_INSTANCE,
+            api_key=AZURE_OPENAI_API_KEY,
+            api_version=AZURE_OPENAI_API_VERSION,
+            temperature=0.5,
+            max_tokens=600,
+        )
 
-    # Configurar retriever
-    retriever = vector_store.as_retriever(
-        search_kwargs={
-            "k": 3,
-            "search_type": "similarity"
-        }
-    )
+        # Configuración del retriever
+        retriever = vector_store.as_retriever(
+            search_kwargs={
+                "k": 2, 
+                "search_type": "similarity"
+            }
+        )
 
-    # Crear cadena de recuperación
-    chain = RetrievalQA.from_chain_type(
-        llm=model,
-        chain_type="stuff",
-        retriever=retriever,
-        chain_type_kwargs={
-            "prompt": prompt,
-            "verbose": False
-        },
-        return_source_documents=False
-    )
-    return chain
+        # Crear cadena QA con manejo de entrada más flexible
+        chain = RetrievalQA.from_chain_type(
+            llm=model,
+            chain_type="stuff",
+            retriever=retriever,
+            chain_type_kwargs={
+                "prompt": prompt, 
+                "verbose": True
+            },
+            return_source_documents=False  # Cambio clave
+        )
+        logging.info("Cadena QA creada exitosamente")
+
+        return chain
+
+    except Exception as e:
+        logging.error(f"Error al crear la cadena QA: {e}", exc_info=True)
+        raise
 
 def procesar_pregunta(chain, pregunta):
     try:
-        resultado = chain.invoke({"query": pregunta})
+        logging.info(f"Procesando pregunta: {pregunta}")
         
-        return {
-            "respuesta": resultado.get('result', 'No pude encontrar una respuesta.'),
-        }
+        # Método de invocación directo
+        try:
+            resultado = chain.invoke({"query": pregunta})
+            
+            # Extraer respuesta
+            if isinstance(resultado, dict):
+                respuesta = resultado.get('result', 'No se pudo generar respuesta')
+            else:
+                respuesta = str(resultado)
+            
+            logging.info(f"Respuesta generada: {respuesta}")
+            return {"respuesta": respuesta}
+        
+        except Exception as invoke_error:
+            logging.error(f"Error al invocar la cadena: {invoke_error}", exc_info=True)  # Agregué exc_info para más detalles
+            return {"respuesta": f"Error al procesar la pregunta: {repr(invoke_error)}"}  # Usé repr para más claridad
+    
     except Exception as error:
-        return {
-            "respuesta": f"Error al procesar la pregunta: {str(error)}",
-        }
+        logging.error(f"Error inesperado al procesar pregunta: {error}", exc_info=True)
+        return {"respuesta": f"Ocurrió un error al procesar su pregunta: {repr(error)}"}
+    
+
 
 def run(pregunta):
-    if len(pregunta) > 300:
-        return "La pregunta excede el límite de 300 caracteres."
+    try:
+        # Validaciones iniciales
+        if not pregunta:
+            return "La pregunta no puede estar vacía."
+        if len(pregunta) > 300:
+            return "La pregunta excede el límite de 300 caracteres."
 
-    documentos = cargar_documentos_pdf("./documents")
-    
-    if not documentos:
-        return "No se encontraron documentos PDF."
-    
-    vector_store = preparar_vector_store(documentos)
-    chain = crear_cadena_qa(vector_store)
-    resultado = procesar_pregunta(chain, pregunta)
-    return resultado['respuesta']
+        # Cargar documentos
+        documentos = cargar_documentos_pdf("./documents")
+        
+        if not documentos:
+            logging.warning("No se encontraron documentos PDF")
+            return "No se encontraron documentos PDF para realizar la búsqueda."
+
+        # Preparar vector store
+        vector_store = preparar_vector_store(documentos)
+        
+        # Crear cadena QA
+        chain = crear_cadena_qa(vector_store)
+        
+        # Procesar pregunta
+        resultado = procesar_pregunta(chain, pregunta)
+        
+        return resultado['respuesta']
+
+    except Exception as error:
+        logging.error(f"Error crítico en la ejecución: {error}", exc_info=True)
+        return f"Ocurrió un error inesperado: {str(error)}"
+
+
+# Agrega este bloque al final de tu script para probar la función sin frontend
+if __name__ == "__main__":
+    # Aquí puedes probar con la pregunta que desees
+    pregunta = "¿que transaccion se utiliza??"
+
+    # Llama a la función 'run' con la pregunta
+    respuesta = run(pregunta)
+
+    # Muestra la respuesta en la consola
+    print(f"Respuesta: {respuesta}")
