@@ -6,22 +6,22 @@ import logging
 app = Flask(__name__)
 
 # Configurar CORS
+# origins = donde esta alojado el frontend, en este caso estamos en localhost puerto 81
 CORS(app, origins="http://localhost:81", methods=["GET", "POST"], allow_headers=["Content-Type", "Authorization"])
 
-# Configurar logs para mostrar mensajes en consola
+# Configuración logs
 logging.basicConfig(level=logging.DEBUG)
 
 @app.route('/chat', methods=['POST'])
 def chat():
-    # Obtener la pregunta del usuario del cuerpo de la solicitud
+    # Obtener pregunta del usuario
     user_question = request.json.get('query')
     app.logger.debug(f'Recibí la pregunta: {user_question}')
 
     try:
-        # Ejecutar la función de procesamiento del chatbot
+        # Ejecutar lógica del chatbot
         response = run(user_question)
         app.logger.debug(f'Respuesta generada: {response}')
-
         return jsonify({"text": response})
 
     except Exception as error:

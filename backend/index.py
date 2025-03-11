@@ -7,35 +7,43 @@ from langchain.chains import RetrievalQA
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_community.document_loaders import PyPDFLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
+from azure.storage.blob import BlobServiceClient
 
-# Cargar variables de entorno
+# Variables de entorno
 dotenv.load_dotenv()
-
 # Configuraciones de Azure OpenAI
 AZURE_OPENAI_API_KEY = os.getenv("AZURE_OPENAI_API_KEY")
 AZURE_OPENAI_API_INSTANCE = os.getenv("AZURE_OPENAI_API_INSTANCE_NAME")
 AZURE_OPENAI_API_DEPLOYMENT = os.getenv("AZURE_OPENAI_API_DEPLOYMENT_NAME")
 AZURE_OPENAI_API_VERSION = os.getenv("AZURE_OPENAI_API_VERSION")
 AZURE_OPENAI_EMBEDDING_DEPLOYMENT = os.getenv("AZURE_OPENAI_EMBEDDING_DEPLOYMENT_NAME")
-
-
-
+# Configuraciones de Blob Storage
+AZURE_STORAGE_CONNECTION_STRING = os.getenv("AZURE_STORAGE_CONNECTION_STRING")
+CONTAINER_NAME = os.getenv("BLOB_CONTAINER_NAME")
+# Vectorización
 VECTOR_STORE_PATH = "./faiss_index"
 MAX_CHUNK_SIZE = 300
 OVERLAP_SIZE = 100
+# Configuración modelo
+MAX_TOKENS = 600
+TEMPERATURE = 0.5
 
 # Prompt
 prompt = ChatPromptTemplate.from_template(
-    """Eres un asistente experto en órdenes de compra, BP, solicitud de pedidos y BOFA en SAP con RPA. 
+    """
+    Eres un asistente experto en órdenes de compra, BP, solicitud de pedidos y BOFA en SAP con RPA. 
     Responde brevemente, en español, saludando y basándote solo en los documentos proporcionados:
 
     Contexto: {context}
     Pregunta: {question}
-    Respuesta:"""
+    Respuesta:
+    """
 )
 
-def cargar_documentos_pdf(ruta_directorio):
-    """Cargar documentos PDF de un directorio"""
+
+
+""" Cargar documentos PDF de un directorio, en este caso localmente desde la carpeta ./documents"""
+def cargar_documentos(ruta_directorio):
     documentos = []
     try:
         for archivo in os.listdir(ruta_directorio):
@@ -45,31 +53,33 @@ def cargar_documentos_pdf(ruta_directorio):
                 documentos.extend(loader.load())
         return documentos
     except Exception as e:
-        print(f"Error cargando documentos: {e}")
+        print(f"Error al cargar documentos: {e}")
         return []
 
-def preparar_vector_store(documentos):
-    """Preparar vector store con documentos y embeddings de Azure"""
+""" Preparar vector store con los documentos cargados y embeddings de Azure """
+def crear_vector_store(documentos):
+    # Crear chunks de texto
     text_splitter = RecursiveCharacterTextSplitter(
         chunk_size=MAX_CHUNK_SIZE,
         chunk_overlap=OVERLAP_SIZE
     )
     split_docs = text_splitter.split_documents(documentos)
 
-    # Embeddings con Azure OpenAI
+    # Embeddings de Azure OpenAI
     embeddings = AzureOpenAIEmbeddings(
         azure_deployment=AZURE_OPENAI_EMBEDDING_DEPLOYMENT,
         azure_endpoint=AZURE_OPENAI_API_INSTANCE,
         api_key=AZURE_OPENAI_API_KEY,
         api_version=AZURE_OPENAI_API_VERSION
     )
+
+    # Test de embed dings
     try:
         test_embedding = embeddings.embed_query("prueba")
-        logging.info(f"Embeddings generados correctamente: {test_embedding[:5]}")  # Muestra los primeros valores
+        logging.info(f"Embeddings generados correctamente: {test_embedding[:5]}")
     except Exception as e:
         logging.error(f"Error al generar embeddings: {e}", exc_info=True)
         raise
-    
 
     # Crear o cargar vector store
     if os.path.exists(VECTOR_STORE_PATH):
@@ -85,11 +95,10 @@ def preparar_vector_store(documentos):
     else:
         vector_store = FAISS.from_documents(split_docs, embeddings)
         vector_store.save_local(VECTOR_STORE_PATH)
-
     return vector_store
 
+""" Crear la cadena de preguntas y respuestas """
 def crear_cadena_qa(vector_store):
-    """Crear la cadena de preguntas y respuestas con Azure OpenAI"""
     try:
         # Configuración del modelo
         model = AzureChatOpenAI(
@@ -97,8 +106,8 @@ def crear_cadena_qa(vector_store):
             azure_endpoint=AZURE_OPENAI_API_INSTANCE,
             api_key=AZURE_OPENAI_API_KEY,
             api_version=AZURE_OPENAI_API_VERSION,
-            temperature=0.5,
-            max_tokens=600,
+            temperature=TEMPERATURE,
+            max_tokens=MAX_TOKENS,
         )
 
         # Configuración del retriever
@@ -109,7 +118,7 @@ def crear_cadena_qa(vector_store):
             }
         )
 
-        # Crear cadena QA con manejo de entrada más flexible
+        # Crear cadena QA
         chain = RetrievalQA.from_chain_type(
             llm=model,
             chain_type="stuff",
@@ -118,10 +127,8 @@ def crear_cadena_qa(vector_store):
                 "prompt": prompt, 
                 "verbose": True
             },
-            return_source_documents=False  # Cambio clave
+            return_source_documents=False
         )
-        logging.info("Cadena QA creada exitosamente")
-
         return chain
 
     except Exception as e:
@@ -131,8 +138,6 @@ def crear_cadena_qa(vector_store):
 def procesar_pregunta(chain, pregunta):
     try:
         logging.info(f"Procesando pregunta: {pregunta}")
-        
-        # Método de invocación directo
         try:
             resultado = chain.invoke({"query": pregunta})
             
@@ -146,53 +151,75 @@ def procesar_pregunta(chain, pregunta):
             return {"respuesta": respuesta}
         
         except Exception as invoke_error:
-            logging.error(f"Error al invocar la cadena: {invoke_error}", exc_info=True)  # Agregué exc_info para más detalles
-            return {"respuesta": f"Error al procesar la pregunta: {repr(invoke_error)}"}  # Usé repr para más claridad
-    
+            logging.error(f"Error al invocar la cadena: {invoke_error}", exc_info=True)
+            return {"respuesta": f"Error al procesar la pregunta: {repr(invoke_error)}"}
+        
     except Exception as error:
         logging.error(f"Error inesperado al procesar pregunta: {error}", exc_info=True)
         return {"respuesta": f"Ocurrió un error al procesar su pregunta: {repr(error)}"}
-    
+
+
+# Implementación de caché para preguntas
+def consultar_cache(pregunta):
+    try:
+        blob_service_client = BlobServiceClient.from_connection_string(AZURE_STORAGE_CONNECTION_STRING)
+        blob_client = blob_service_client.get_blob_client(container=CONTAINER_NAME, blob=pregunta)
+        stream = blob_client.download_blob()
+        return stream.readall().decode("utf-8")
+    except Exception as e:
+        return None
+
+def guardar_en_cache(pregunta, respuesta):
+    try:
+        blob_service_client = BlobServiceClient.from_connection_string(AZURE_STORAGE_CONNECTION_STRING)
+        blob_client = blob_service_client.get_blob_client(container=CONTAINER_NAME, blob=pregunta)
+        blob_client.upload_blob(respuesta.encode("utf-8"), overwrite=True)
+    except Exception as e:
+        logging.error(f"Error al guardar en caché: {e}", exc_info=True)
+
 
 
 def run(pregunta):
     try:
-        # Validaciones iniciales
+        # Validaciones preguntas
         if not pregunta:
             return "La pregunta no puede estar vacía."
         if len(pregunta) > 300:
             return "La pregunta excede el límite de 300 caracteres."
 
+        # Verificar caché
+        respuesta_cache = consultar_cache(pregunta)
+        if respuesta_cache:
+            logging.info(f"Respuesta encontrada en caché: {respuesta_cache}")
+            return respuesta_cache
+
         # Cargar documentos
-        documentos = cargar_documentos_pdf("./documents")
-        
+        documentos = cargar_documentos("./documents")
         if not documentos:
             logging.warning("No se encontraron documentos PDF")
             return "No se encontraron documentos PDF para realizar la búsqueda."
 
         # Preparar vector store
-        vector_store = preparar_vector_store(documentos)
-        
+        vector_store = crear_vector_store(documentos)
         # Crear cadena QA
         chain = crear_cadena_qa(vector_store)
-        
         # Procesar pregunta
         resultado = procesar_pregunta(chain, pregunta)
-        
-        return resultado['respuesta']
+        respuesta = resultado['respuesta']
+
+        # Guardar en caché
+        guardar_en_cache(pregunta, respuesta)
+
+        return respuesta
 
     except Exception as error:
         logging.error(f"Error crítico en la ejecución: {error}", exc_info=True)
         return f"Ocurrió un error inesperado: {str(error)}"
 
 
-# Agrega este bloque al final de tu script para probar la función sin frontend
+
+# probar el code sin frontend
 if __name__ == "__main__":
-    # Aquí puedes probar con la pregunta que desees
     pregunta = "¿que transaccion se utiliza??"
-
-    # Llama a la función 'run' con la pregunta
     respuesta = run(pregunta)
-
-    # Muestra la respuesta en la consola
     print(f"Respuesta: {respuesta}")
