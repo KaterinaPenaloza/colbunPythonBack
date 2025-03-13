@@ -22,8 +22,8 @@ AZURE_STORAGE_CONNECTION_STRING = os.getenv("AZURE_STORAGE_CONNECTION_STRING")
 CONTAINER_NAME = os.getenv("BLOB_CONTAINER_NAME")
 # Vectorización
 VECTOR_STORE_PATH = "./faiss_index"
-MAX_CHUNK_SIZE = 300
-OVERLAP_SIZE = 100
+MAX_CHUNK_SIZE = 600
+OVERLAP_SIZE = 150
 # Configuración modelo
 MAX_TOKENS = 600
 TEMPERATURE = 0.5
@@ -215,3 +215,13 @@ def run(pregunta):
     except Exception as error:
         logging.error(f"Error crítico en la ejecución: {error}", exc_info=True)
         return f"Ocurrió un error inesperado: {str(error)}"
+
+
+
+# probar el code sin frontend
+""" if __name__ == "__main__":
+    pregunta = "¿que transacción se utiliza??"
+    respuesta = run(pregunta)
+    print(f"Respuesta: {respuesta}") """
+
+
