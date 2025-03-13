@@ -73,7 +73,7 @@ def crear_vector_store(documentos):
         api_version=AZURE_OPENAI_API_VERSION
     )
 
-    # Test de embed dings
+    # Test de embeddings
     try:
         test_embedding = embeddings.embed_query("prueba")
         logging.info(f"Embeddings generados correctamente: {test_embedding[:5]}")
@@ -215,11 +215,3 @@ def run(pregunta):
     except Exception as error:
         logging.error(f"Error crítico en la ejecución: {error}", exc_info=True)
         return f"Ocurrió un error inesperado: {str(error)}"
-
-
-
-# probar el code sin frontend
-if __name__ == "__main__":
-    pregunta = "¿que transaccion se utiliza??"
-    respuesta = run(pregunta)
-    print(f"Respuesta: {respuesta}")
